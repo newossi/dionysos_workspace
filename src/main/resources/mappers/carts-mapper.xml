@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cartsMapper">
+
+	<!-- 장바구니에 담기 -->
+	<insert id="insertCarts">
+		insert into carts (cart_id, user_id, product_id, amount)
+		values
+		(seq_cart.nextval, #{user_id}, #{product_id}, #{amount} )
+	</insert>
+	<select id="listCarts" resultType="">
+		<!-- DAO에서 listCart라는 태그로 인해 실행되고 결과타입은 DTO타입으로 한다. (다른계층으로 보내기 위해서) -->
+
+		select cart_id, p.product_id, c.user_id, name, product_name, amount,
+		price, (price*amount) money
+		<!-- 장바구니의 번호, 상품 번호, 회원번호, 회원이름, 상품이름, 상품의양, 상품1개의 가격, 상품의 전체가격을 검색한다. -->
+		<!--양쪽 테이블에 다 있는 속성이면 어떤 테이블의 속성인지 정확히 표기해주어야 한다. -->
+
+		from member m, carts c, product p
+		<!-- 회원테이블과, 장바구니 테이블과, 상품테이블로 부터 -->
+
+		where m.user_id=c.user_id and c.product_id=p.product_id and
+		c.user_id=#{user_id} order by cart_id
+		<!--회원테이블의 회원id와 장바구니테이블의 회원id가 같고, 장바구니의 상품id와 상품테이블의 상품id가 같고, 장바구니테이블의 
+			회원id가 장바구니에 저장되있는 회원id와 같을때 -->
+		<!-- 장바구니에 관한 정보를 담은 sql문이다. -->
+
+	</select>
+
+	<select id="sumMoney" resultType="_int">
+
+		select nvl(sum(product_price*amount),0)
+		<!--금액과 상품갯수를 곱한값과 0을더해서 0이 나오는 것을 검색한다. -->
+		<!--그러니까 아무것도 담지 않았을때를 확인하는 것이다. -->
+		<!--빈값이 null이면 안되기 때문에 대체값으로 0이 출력되게끔 만들었다 -->
+
+		from carts c,product p
+		<!-- 장바구니 테이블과 상품 테이블로 부터 -->
+
+		where c.product_id=p.product_id and user_id=#{user_id}
+		<!--조건 : 장바구니테이블의 상품 id가 상품테이블의 상품 id와 같고, 요청하는 회원의 id와 같은 경우 -->
+
+	</select>
+
+	<!-- 장바구니 개별 상품 삭제 -->
+	<delete id="deleteCarts">
+		delete from carts where cart_id=#{cart_id}
+	</delete>
+
+	<!-- 장바구니 비우기 -->
+	<delete id="deleteAllCarts">
+		delete from carts where user_id=#{user_id}
+		<!-- 장바구니테이블로부터 회원의 아이디와 삭제하고자하는 회원의 아이디가 같으면 장바구니에 있는 자료를 전부다 삭제 -->
+	</delete>
+	
+	<update id="updateCarts">
+		delete from carts set where 
+	</update>
+
+
+
+
+
+
+</mapper>

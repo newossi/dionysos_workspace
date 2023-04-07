@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="noticeMapper">
+
+	<resultMap type="Notice" id="resultNotice">
+		<id property="notice_no" column="notice_no"/>
+		<result property="title" column="title"/>
+		<result property="content" column="content"/>
+		<result property="created_at" column="created_at"/>
+		<result property="notice_original_filename" column="notice_original_filename"/>
+		<result property="notice_rename_filename" column="notice_rename_filename"/>
+		<result property="read_count" column="read_count"/>
+		<result property="user_id" column="user_id"/>
+	</resultMap>
+	
+	
+	<!-- 공지사항 전체 목록 출력 -->
+	<select id="selectAllList" resultMap="resultNotice">
+		select * from notice
+		order by notice_no desc
+	</select>
+	
+	<!-- 페이징처리 -->
+	<select id="selectList" parameterType="Notice" resultMap="resultNotice">
+	<![CDATA[
+		select * 
+		from (select rownum rnum, notice_no, created_at, title, content, user_id, 
+			  notice_original_filename, notice_rename_filename, read_count
+        	  from (select * from notice
+                 	order by notice_no desc))
+		where rnum >= #{startRow} and rnum <= #{endRow}
+	 ]]>
+	</select>
+	
+	<!-- 공지사항 상세보기 -->
+	<select id="selectNotice" parameterType="_int" resultMap="resultNotice">
+		select * from notice
+		where notice_no = #{notice_no}
+	</select>
+	
+	<!-- 제목으로 검색 -->
+	<select id="selectSearchTitle" parameterType="string" resultMap="resultNotice">
+		select * from notice
+		where title like '%' || #{title} || '%'
+		order by notice_no desc
+	</select>
+	
+	<!-- 날짜로 검색 -->
+	<select id="selectSearchDate" parameterType="SearchDate" resultMap="resultNotice">
+		select * from notice
+		where created_at between #{begin} - 1 and #{end} + 1
+		order by notice_no desc
+	</select>
+	
+	<!-- 조회수 1증가 처리 -->
+	<update id="updateReadcount" parameterType="_int">
+		update notice
+		set read_count = read_count + 1
+		where notice_no = #{notice_no}
+	</update>
+	
+	<!-- 공지사항 등록 -->
+	<insert id="insertNotice" parameterType="Notice">
+		insert into notice (notice_no, created_at, title, content, user_id, 
+			  notice_original_filename, notice_rename_filename, read_count)
+		values ((select max(notice_no) + 1 from notice), sysdate, #{title}, #{content}, #{user_id}, 
+				#{notice_original_filename, jdbcType=VARCHAR}, #{notice_rename_filename, jdbcType=VARCHAR}, #{read_count})
+	</insert>
+	
+	<!-- 공지사항 수정 -->
+	<update id="updateNotice" parameterType="Notice">
+		update notice
+		set title = #{title}, content = #{content}, created_at = sysdate
+			<if test="notice_original_filename != null">
+				, notice_original_filename = #{notice_original_filename}
+				, notice_rename_filename = #{notice_rename_filename}
+			</if>
+			<if test="notice_original_filename == null">
+				, notice_original_filename = null
+				, notice_rename_filename = null
+			</if>
+		where notice_no = #{notice_no}
+	</update>
+	
+	<!-- 공지사항 삭제 -->
+	<delete id="deleteNotice" parameterType="_int">
+		delete from notice
+		where notice_no = #{notice_no}
+	</delete>
+	
+	<!-- 전체 게시글 목록 갯수 가져오기 -->
+	<select id="getListCount" parameterType="_int">
+		select count(*) from notice
+	</select>
+
+</mapper>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="faqMapper">
+
+	<resultMap type="Faq" id="resultFaq">
+		<result property="faq_no" column="faq_no" />
+		<result property="question" column="question" />
+		<result property="answer" column="answer" />
+		<result property="registration_date" column="registration_date" />
+		<result property="user_id" column="user_id" />
+<!-- 		<result property="views" column="views" /> -->
+	</resultMap>
+
+
+	<!-- 자주하는 질문 전체 목록 출력(사용자) -->
+	<select id="selectFaq" resultMap="resultFaq">
+		select * from faq
+		order by faq_no
+	</select>
+	
+	<!-- 자주하는 질문 상세보기(관리자) -->
+	<select id="selectList" parameterType="_int" resultMap="resultFaq">
+		select * from faq
+		where faq_no = #{faq_no}
+	</select>
+	
+	<!-- 자주하는 질문 등록 -->
+	<insert id="insertFaq" parameterType="Faq">
+		insert into faq (faq_no, question, answer, registration_date, user_id)
+		values ((select max(faq_no) + 1 from faq), #{question}, #{answer}, sysdate, #{user_id})
+	</insert>
+	
+	<!-- 자주하는 질문 수정 -->
+	<update id="updateFaq" parameterType="Faq">
+		update faq
+		set question = #{question}, answer = #{answer}, registration_date = sysdate
+		where faq_no = #{faq_no}
+	</update>
+	
+	<!-- 자주하는 질문 삭제 -->
+	<delete id="deleteFaq" parameterType="_int">
+		delete from faq
+		where faq_no = #{faq_no}
+	</delete>
+
+</mapper>

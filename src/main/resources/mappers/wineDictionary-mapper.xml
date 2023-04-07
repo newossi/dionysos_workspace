@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="wineDictionaryMapper">
+
+	<resultMap type="WineDictionary" id="resultWineDictionary">
+		<result property="grape_type" column="grape_type" />
+		<result property="sweetness" column="sweetness" />
+		<result property="acidity" column="acidity" />
+		<result property="body" column="body" />
+		<result property="tannin" column="tannin" />
+	</resultMap>
+
+	<resultMap type="WineDictionary"
+		id="resultWineDictionaryDetail">
+		<result property="grape_type" column="grape_type" />
+		<result property="sweetness" column="sweetness" />
+		<result property="acidity" column="acidity" />
+		<result property="body" column="body" />
+		<result property="tannin" column="tannin" />
+		<result property="wine_dictionary" column="wine_dictionary" />
+	</resultMap>
+
+	<select id="selectList" resultMap="resultWineDictionary">
+		select grape_type, sweetness, acidity, body, tannin
+		from product
+	</select>
+
+	<select id="selectWineDictionary"
+		resultMap="resultWineDictionaryDetail">
+		<![CDATA[
+		select grape_type, sweetness, acidity, body, tannin, wine_dictionary
+        from (select Rownum rnum, grape_type, sweetness, acidity, body, tannin, wine_dictionary
+	         from product
+	         where grape_type = #{ grape_type }
+	         order by rnum)
+        where rnum = 1
+        ]]>
+	</select>
+
+	<select id="selectSearchTitle" parameterType="string"
+		resultMap="resultWineDictionary">
+		select grape_type, sweetness, acidity, body, tannin
+		from product
+		where grape_type like '%' || #{ keyword } || '%'
+	</select>
+
+
+	<!-- insertWineDictionary updateWineDictionary deleteWineDictionary -->
+
+</mapper>

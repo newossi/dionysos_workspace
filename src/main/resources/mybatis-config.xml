@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE configuration PUBLIC
+"-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+   <settings>
+      <setting name="jdbcTypeForNull" value="NULL"/>
+      <setting name="cacheEnabled" value="false"/>
+   </settings>
+    <!-- 매퍼에서 사용할 vo 클래스에 대한 줄임말 선언 -->
+	<typeAliases>
+	    <typeAlias type="org.nulljump.dionysos.users.model.vo.Users" alias="Users" />
+	    <typeAlias type="org.nulljump.dionysos.common.SearchDate" alias="SearchDate" />
+	    <typeAlias type="org.nulljump.dionysos.common.Paging" alias="Paging" />
+	    <typeAlias type="org.nulljump.dionysos.common.Searchs" alias="Searchs" />
+	    <typeAlias type="org.nulljump.dionysos.common.FileDownloadView" alias="FileDownloadView" />
+	    <typeAlias type="org.nulljump.dionysos.common.FileNameChange" alias="FileNameChange" />
+		<typeAlias type="org.nulljump.dionysos.notice.model.vo.Notice" alias="Notice" />
+		<typeAlias type="org.nulljump.dionysos.faq.model.vo.Faq" alias="Faq" />
+		<typeAlias type="org.nulljump.dionysos.qna.model.vo.Qna" alias="Qna" />
+		<typeAlias type="org.nulljump.dionysos.winedictionary.model.vo.WineDictionary" alias="WineDictionary" /> 
+		<typeAlias type="org.nulljump.dionysos.roulette.model.vo.Roulette" alias="Roulette" />
+		<typeAlias type="org.nulljump.dionysos.product.model.vo.Product" alias="Product" /> 
+	</typeAliases>
+
+	<!-- mapper : 실행할 쿼리문만 별도로 작성하는 파일을 말함 -->
+	<mappers>
+	    <mapper resource="mappers/wineDictionary-mapper.xml" />
+	    <mapper resource="mappers/roulette-mapper.xml" />
+	    <mapper resource="mappers/notice-mapper.xml" />
+		<mapper resource="mappers/faq-mapper.xml" />
+		<mapper resource="mappers/qna-mapper.xml" />
+		<mapper resource="mappers/users-mapper.xml" />
+		<mapper resource="mappers/product-mapper.xml" />
+	</mappers>
+</configuration>

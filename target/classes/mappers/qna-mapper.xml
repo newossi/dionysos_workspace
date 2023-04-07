@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="qnaMapper">
+
+	<resultMap type="Qna" id="resultQna">
+		<result property="qna_no" column="qna_no" />
+		<result property="user_id" column="user_id" />
+		<result property="title" column="title" />
+		<result property="content" column="content" />
+		<result property="created_at" column="created_at" />
+		<result property="inquiry_type" column="inquiry_type" />
+		<result property="inquiry_state" column="inquiry_state" />
+		<result property="qna_original_filename" column="qna_original_filename" />
+		<result property="qna_rename_filename" column="qna_rename_filename" />
+		<result property="qna_ref" column="qna_ref" />
+		<result property="qna_reply_ref" column="qna_reply_ref" />
+		<result property="qna_lev" column="qna_lev" />
+		<result property="qna_reply_seq" column="qna_reply_seq" />
+		<result property="answered_at" column="answered_at" />
+	</resultMap>
+
+	
+	<!-- 1:1문의 전체 목록 출력 -->
+	<select id="selectAllList" resultMap="resultQna">
+		select * from qna
+		order by qna_no
+	</select>
+	
+	<!-- 페이징처리 추가 -->
+	<select id="selectList" parameterType="Paging" resultMap="resultQna">
+	<![CDATA[
+		select * 
+		from (select rownum rnum, qna_no, user_id, title, content, created_at, inquiry_type, 
+				inquiry_state, qna_original_filename, qna_rename_filename, qna_ref, 
+				qna_reply_ref, qna_lev, qna_reply_seq, answered_at
+        	from (select * from qna
+                 order by qna_ref desc, qna_reply_ref desc, qna_lev asc, qna_reply_seq asc))
+		where rnum >= #{startRow} and rnum <= #{endRow}
+	 ]]>
+	</select>
+	
+	<!-- 1:1문의 상세보기 -->
+	<select id="selectQna" parameterType="_int" resultMap="resultQna">
+		select * from qna
+		where qna_no = #{qna_no}
+	</select>
+	
+	
+	<!-- 제목으로 검색 -->
+	<select id="selectTitleSearch" parameterType="string" resultMap="resultQna">
+		select * from qna
+		where title like '%' || #{title} || '%'
+		order by qna_no desc
+	</select>
+	
+	
+	<!-- 사용자 아이디로 검색 -->
+	<select id="selectIdSearch" parameterType="string" resultMap="resultQna">
+		select * from qna
+		where user_id = #{user_id}
+		order by qna_no desc
+	</select>
+	
+	
+	<!-- 날짜로 검색 -->
+	<select id="selectDateSearch" parameterType="SearchDate" resultMap="resultQna">
+		select * from qna
+		where created_at between #{begin} - 1 and #{end} + 1
+		order by qna_no desc
+	</select>
+	
+	
+	<!-- 1:1문의 등록 -->
+	<insert id="insertInquiry" parameterType="Qna">
+		insert into qna (qna_no, user_id, title, content, created_at, inquiry_type,
+							inquiry_state, qna_original_filename, qna_rename_filename,
+							qna_ref, qna_reply_ref, qna_lev, qna_reply_seq, answered_at)
+		values ((select max(qna_no) + 1 from qna), #{user_id}, #{title}, #{content}, sysdate, 
+						#{inquiry_type}, #{inquiry_state}, #{qna_original_filename, jdbcType=VARCHAR}, 
+						#{qna_rename_filename, jdbcType=VARCHAR}, 
+						(select max(qna_no) + 1 from qna), null, 1, default, null)
+	</insert>
+	
+	
+	<!-- 1:1문의 수정 -->
+	<update id="updateInquiry" parameterType="Qna">
+		update qna
+		set title = #{title}, content = #{content}, created_at = sysdate, inquiry_type = #{inquiry_type}
+			<if test="qna_original_filename != null">
+				, qna_original_filename = #{qna_original_filename}
+				, qna_rename_filename = #{qna_rename_filename}
+			</if>
+			<if test="qna_original_filename == null">
+				, qna_original_filename = null
+				, qna_rename_filename = null
+			</if>
+		where qna_no = #{qna_no}
+	</update>
+	
+	<!-- 1:1문의 삭제 -->
+	<delete id="deleteInquiry" parameterType="Qna">
+		delete from qna 
+		<if test="qna_lev == 1">
+			where qna_ref = #{qna_no}
+		</if>
+		<if test="qna_lev == 2">
+			where qna_reply_ref = #{qna_no}
+		</if>
+	</delete>
+	
+	
+	<!-- 답변 등록 -->
+	<!-- 댓글과 대댓글 : 참조 원글번호 (board_ref) 가 동일
+		 댓글 등록시 : 참조 댓글번호(board_reply_ref)에 자신의 번호를 기록 -->
+	<insert id="insertReply" parameterType="Qna">
+		insert into qna (qna_no, user_id, title, content, created_at, inquiry_type, 
+									inquiry_state, qna_original_filename, qna_rename_filename, 
+									qna_ref, qna_reply_ref, qna_lev, qna_reply_seq, answered_at)
+		values ((select max(qna_no) + 1 from qna), #{user_id}, #{title}, #{content}, #{created_at}, 
+						#{inquiry_type}, #{inquiry_state}, #{qna_original_filename, jdbcType=VARCHAR}, 
+						#{qna_rename_filename, jdbcType=VARCHAR}, #{qna_ref},
+						<if test="qna_lev == 2">
+						(select max(qna_no) + 1 from qna),
+						</if>
+						#{qna_lev}, default, sysdate)
+	</insert>
+	
+	<!-- 답변 수정 -->
+	<update id="updateReply" parameterType="Qna">
+		update qna
+		set title = #{title}, content = #{content}, answered_at = sysdate
+		where qna_no = #{qna_no}
+	</update>
+	
+	<!-- 답변 삭제 -->
+	<delete id="deleteReply" parameterType="Qna">
+		delete from qna 
+		where qna_reply_ref = #{qna_no}
+	</delete>
+
+	<!-- 전체 게시글 목록 갯수 가져오기 -->
+	<select id="selectListCount" resultType="_int">
+		select count(*) from qna
+	</select>
+	
+<!-- 	같은 원글에 대한 기존의 댓글들의 순번 1증가 처리
+		 예를들어 원글 12번의 등록된 댓글이 3개가 있다면 댓글 3개의 순번을(seq)을 모두 1증가 처리 -->
+	<update id="updateReplySeq" parameterType="Qna">
+		update qna
+		set qna_reply_seq = qna_reply_seq + 1
+		where qna_ref = #{qna_ref}
+		and qna_lev = #{qna_lev}
+	</update>
+
+
+</mapper>

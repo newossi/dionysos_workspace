@@ -1,0 +1,115 @@
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="usersMapper">
+
+	<resultMap type="Users" id="resultUsers">
+		<id property="user_id" column="user_id" />
+		<result property="password" column="password" />
+		<result property="name" column="name" />
+		<result property="birthday" column="birthday" />
+		<result property="phone" column="phone" />
+		<result property="email" column="email" />
+		<result property="admin" column="admin" />
+	</resultMap>
+
+	<!-- 로그인 처리용 -->
+	<select id="selectLogin" parameterType="Users" 
+		resultType="Users">
+		select * from users
+		where user_id = #{ user_id } and password = #{ password }
+	</select>
+	
+	
+	
+	<!-- 아이디로 회원 정보 조회용 -->
+	<select id="selectUsers" parameterType="string" 
+		resultMap="resultUsers">
+		select * from users
+		where user_id = #{ user_id }
+	</select>
+	
+	<!-- 이메일로 회원 정보 조회 111 -->
+	<select id ="selectEmail" parameterType="string" resultMap="resultUsers">
+		select * from users
+		where email like '%' || #{ keyword } || '%'
+	</select>
+	
+	<!-- 생년월일로 회원 정보 조회 -->
+	<select id="selectBirthday" parameterType="SearchDate" resultMap="resultUsers">
+		select * from users
+		where birthday between #{begin} and #{end}
+	</select>
+	
+	<!-- 회원가입시 아이디 중복 체크 처리용 -->
+	<select id="selectDupCheckId" parameterType="string" resultType="_int">
+		select count(user_id) from users
+		where user_id = #{ uid }
+	</select>
+	
+	<!-- 회원 전체 조회용 -->
+	<select id="selectList" resultMap="resultUsers">
+		select * from users
+	</select>
+	
+	<!-- 회원 가입 처리용 -->
+	<insert id="insertUsers" parameterType="Users" >
+		insert into users (user_id, password, name, 
+				birthday, phone, email, admin)
+		values (#{ user_id }, #{ password }, #{ name }, 
+				#{ birthday }, #{ phone }, #{ email }, 
+				default)
+	</insert>
+	
+	<!-- 회원 탈퇴 처리용 -->
+	<delete id="deleteUsers" parameterType="string">
+		delete from users
+		where user_id = #{ uid }
+	</delete>
+	
+	<!-- 회원 탈퇴 처리용 -->
+	<delete id="evictionUsers" parameterType="string">
+		delete from users
+		where user_id = #{ user_id }
+	</delete>
+	
+	<!-- 회원 정보 수정 처리용 -->
+	<update id="updateUsers" parameterType="Users">
+		update users
+		set password = #{ password }, 
+			birthday = #{ birthday },
+			phone = #{ phone },
+			email = #{ email }
+		where user_id = #{ user_id }
+	</update>
+	
+	<!-- 검색용 select -->
+	<select id="selectSearchUserid" parameterType="Searchs" resultMap="resultUsers">
+		select * from users
+		where user_id like '%' || #{ keyword } || '%'
+	</select>
+	
+	<!-- 아이디 찾기 -->
+	<select id="find_id" parameterType="string" resultType="string">
+		select user_id from users 
+		where email = #{ email }
+	</select>
+	
+	<!-- 비밀번호 변경하기 -->
+	<update id="update_pw" parameterType="Users">
+		update users 
+		set password = #{ password }
+		where user_id = #{ user_id }
+	</update>
+	<!-- 비밀번호 찾기용 -->
+	<select id="pwdsearch"  parameterType="Users" resultType="_int">
+		select count(*) from users
+		where user_id = #{ user_id }
+		and email = #{ email }
+	</select>
+</mapper>
+
+
+
+
+

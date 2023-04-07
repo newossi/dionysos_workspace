@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+"-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="productMapper">
+	<resultMap type="Product" id="resultTop4">
+		<result property="product_image" column="product_image" />
+		<result property="product_name" column="product_name" />
+		<result property="product_ename" column="product_ename" />
+		<result property="product_price" column="product_price" />
+
+	</resultMap>
+
+	<resultMap type="Product" id="resultProduct">
+		<id property="product_id" column="product_id" />
+		<result property="prduct_name" column="prduct_name" />
+		<result property="product_ename" column="product_ename" />
+		<result property="product_price" column="product_price" />
+		<result property="alcohol" column="alcohol" />
+		<result property="sweetness" column="sweetness" />
+		<result property="body" column="body" />
+		<result property="tannin" column="tannin" />
+		<result property="description" column="description" />
+		<result property="grape_type" column="grape_type" />
+		<result property="wine_detail" column="wine_detail" />
+		<result property="wine_volume" column="wine_volume" />
+		<result property="wine_origin" column="wine_origin" />
+		<result property="wine_type" column="wine_type" />
+		<result property="production_date" column="production_date" />
+	</resultMap>
+
+	<!-- 전체 상품 리스트 (페이징) -->
+	<select id="selectProductList" parameterType="Paging"
+		resultMap="resultProduct">
+           <![CDATA[
+           select *
+           from (select rownum rnum, product_id, product_name, product_ename, product_price, product_image, 
+                 alcohol, acidity, sweetness, body, tannin, description, grape_type, wine_detail, wine_dictionary, 
+                 wine_volume, wine_origin, wine_type, production_date
+                 from (select * from product
+                 order by product_id asc))
+           where rnum >= #{ startRow } and rnum <= #{ endRow }
+           ]]>
+	</select>
+
+	<!-- Top N 분석 (베스트 판매상품) -->
+	<select id="selectTop4" resultMap="resultProduct">
+		<![CDATA[
+		SELECT *
+		FROM (
+   		 SELECT ROWNUM rnum, product_image, product_name, product_price, product_ename, wine_type, product_id
+    		FROM (
+        SELECT p.product_id, product_image, product_price, product_ename, wine_type, p.product_name, SUM(sales_amount) AS sales_amount
+        FROM product p
+        INNER JOIN stock st ON p.product_id = st.product_id
+        GROUP BY p.product_id, product_name, product_image, product_price, product_ename, wine_type
+        ORDER BY sales_amount DESC
+   		 )
+			)
+		WHERE rnum >= 1 AND rnum <= 4
+		]]>
+	</select>
+
+	<!-- Top N 분석 (신상품) -->
+	<select id="selectNew4" resultMap="resultProduct">
+		<![CDATA[
+		SELECT *
+		FROM (SELECT ROWNUM rnum, product_image, product_name, product_price, product_ename, wine_type, product_id
+        		FROM (SELECT p.product_id, product_image, product_price, product_ename, wine_type, p.product_name, production_date
+						FROM product p
+						INNER JOIN stock st ON p.product_id = st.product_id
+						GROUP BY p.product_id, p.product_name, product_image, product_price, product_ename, wine_type, production_date
+						ORDER BY production_date DESC
+			)
+		)
+		WHERE rnum >= 1 AND rnum <= 4
+		]]>
+	</select>
+
+	<!-- 상품 번호 기준 검색 -->
+	<select id="selectProduct" parameterType="_int"
+		resultMap="resultProduct">
+		select * from product
+		where product_id = #{ product_id };
+	</select>
+
+	<!-- 상품명 기준 검색 -->
+	<select id="selectSearchProductName" parameterType="string"
+		resultMap="resultProduct">
+		select * from product
+		where product_name like '%' || #{
+		keyword } || '%'
+		order by product_id desc
+	</select>
+	<!-- 상품 영문명 기준 검색 -->
+	<select id="selectSearchProductEname" parameterType="string"
+		resultMap="resultProduct">
+		select * from product
+		where product_name like '%' || #{
+		keyword } || '%'
+		order by product_id desc
+	</select>
+	<!-- 상품 가격기준 검색 - 수정 필요 -->
+	<select id="selectSearchProductPrice" parameterType="_int"
+		resultMap="resultProduct">
+		select * from product
+		where product_price = #{ product_price
+		}
+	</select>
+
+	<!-- 수정 필요 -->
+	<select id="selectSearchProductAlcohol" parameterType="float"
+		resultMap="resultProduct">
+		select * from product
+		where alcohol = #{ alcohol }
+	</select>
+	<!-- 상품 산도 기준 검색 -->
+	<select id="selectSearchProductAcidity" parameterType="_int"
+		resultMap="resultProduct">
+		select * from product
+		where acidity = #{ acidity }
+	</select>
+	<!-- 상품 당도 기준 검색 -->
+	<select id="selectSearchProductSweetness" parameterType="_int"
+		resultMap="resultProduct">
+		select * from product
+		where sweetness = #{ sweetness }
+	</select>
+	<!-- 상품 바디 기준 검색 -->
+	<select id="selectSearchProductBody" parameterType="_int"
+		resultMap="resultProduct">
+		select * from product
+		where body = #{ body }
+	</select>
+	<!-- 상품 타닌 기준 검색 -->
+	<select id="selectSearchProductTannin" parameterType="_int"
+		resultMap="resultProduct">
+		select * from product
+		where tannin = #{ tannin }
+	</select>
+	<!-- 상품 원산지 기준 검색 -->
+	<select id="selectSearchProductOrigin" parameterType="string"
+		resultMap="resultProduct">
+		select * from product
+		where wine_origin like '%' || #{
+		keyword } || '%'
+		order by product_id desc
+	</select>
+	<!-- 상품 와인종류 기준 검색 -->
+	<select id="selectSearchProductType" parameterType="string"
+		resultMap="resultProduct">
+		select * from product
+		where wine_type like '%' || #{ keyword
+		} || '%'
+		order by product_id desc
+	</select>
+
+	<!-- 관리자 상품 추가 - 수정 필요 -->
+	<insert id="insertProduct" parameterType="Product">
+		insert into product
+		(product_id, product_name, product_ename, product_price,
+		product_image,
+		alcohol, acidity, sweetness, body, tannin, description,
+		grape_type,
+		wine_detail, wine_dictionary,
+		wine_volume, wine_origin,
+		wine_type, production_date)
+		values ((select max(product_id) + 1 from
+		product),
+		#{ product_name }, #{ product_ename }, #{ product_price },
+		#{
+		product_image, jdbcType=VARCHAR },
+		#{ alcohol },#{ acidity },#{
+		sweetness },#{ body },#{ tannin },
+		#{ description },#{ wine_detail },
+		#{ wine_dictionary },
+		#{ wine_volume },#{ wine_origin }, #{ wine_type
+		},
+		#{ production_date })
+	</insert>
+
+	<!-- 관리자 상품 수정 - 수정 필요 -->
+	<update id="updateProduct" parameterType="Product">
+		update product
+		set
+		product_name = #{ product_name },
+		product_ename = #{ product_ename },
+		product_price = #{ product_price },
+		alcohol = #{ alcohol },
+		acidity = #{
+		acidity },
+		sweetness = #{ sweetness },
+		body = #{ body },
+		tannin = #{
+		tannin },
+		description = #{ description },
+		grape_type = #{ grape_type },
+		wine_detail = #{ wine_detail },
+		wine_dictionary = #{ wine_dictionary },
+		wine_volume = #{ wine_volume },
+		wine_origin = #{ wine_origin },
+		wine_type = #{ wine_type },
+		production_date = #{ production_date }
+
+		where product_id = #{ product_id }
+	</update>
+	<!-- 관리자 상품 삭제 - 상품번호 기준 -->
+	<delete id="deleteProduct" parameterType="_int">
+		delete from product
+		where product_id = #{ product_id }
+	</delete>
+
+
+	<!-- 메인페이지 다중 조건 검색 -->
+	<select id="selectAdvancedSearch" resultMap="resultTop4">
+		select *
+		from product
+		where
+		<if test="wine_type != null">
+			wine_type in
+			<foreach item="wine_type" index="index"
+				collection="wine_type" open="(" separator="," close=")">
+				#{wine_type} and
+			</foreach>
+		</if>
+		<if test="wine_origin != null">
+			wine_origin in
+			<foreach item="wine_origin" index="index"
+				collection="wine_origin" open="(" separator="," close=")">
+				#{wine_origin} and
+			</foreach>
+		</if>
+		<if test="product_price != null">
+			product_price >= #{product_price} and
+		</if>
+		<if test="sweetness != null">
+			sweetness = #{sweetness} and
+		</if>
+		<if test="acidity != null">
+			acidity = #{acidity} and
+		</if>
+		<if test="body != null">
+			body = #{body} and
+		</if>
+		<if test="tannin != null">
+			tannin = #{tannin}
+		</if>
+	</select>
+	<!-- 상품 갯수 카운트 표시 -->
+	<select id="selectListCount" resultType="_int">
+		select count(*) from product
+	</select>
+
+
+</mapper>
